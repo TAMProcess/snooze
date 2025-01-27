@@ -31,9 +31,10 @@ jungleLayers[1].image.src = 'jungle_layer2.png';
 const gravity = 1;
 let obstacleSpeed = 5;
 const obstacleY = canvas.height - 150;
-let gameRunning = true;
+let gameRunning = false; // Start as false
 let score = 0;
 let obstaclesCleared = 0;
+let firstStart = true; // Track first game start
 
 function playBackgroundMusic() {
     backgroundMusic.play();
@@ -142,6 +143,25 @@ function drawPowerUps() {
     });
 }
 
+document.addEventListener('keydown', (e) => {
+    if (e.code === 'Space') {
+        if (!gameRunning) {
+            gameRunning = true;
+            if (firstStart) {
+                createObstacle(); // Start creating obstacles
+                createPowerUp();  // Start creating power-ups
+                firstStart = false; // Avoid duplicating initializations
+            }
+            instructions.style.display = 'none'; // Hide instructions
+            gameLoop(); // Start the game loop
+        }
+        if (!character.jumping) {
+            character.jumping = true;
+            character.dy = -16; // Trigger jump
+        }
+    }
+});
+
 function gameLoop() {
     if (!gameRunning) {
         return;
@@ -169,6 +189,3 @@ retryButton.addEventListener('click', () => {
 });
 
 playBackgroundMusic();
-createObstacle();
-createPowerUp();
-gameLoop();
