@@ -25,8 +25,8 @@ const jungleLayers = [
     { x: 0, y: 0, speed: 2, image: new Image() },
 ];
 
-jungleLayers[0].image.src = 'jungle_layer1.png';
-jungleLayers[1].image.src = 'jungle_layer2.png';
+jungleLayers[0].image.src = 'jungle_layer1.png'; // Placeholder path
+jungleLayers[1].image.src = 'jungle_layer2.png'; // Placeholder path
 
 const gravity = 1;
 let obstacleSpeed = 5;
@@ -152,6 +152,17 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
+function updateCharacter() {
+    character.y += character.dy;
+    if (character.y + character.height >= canvas.height - 100) {
+        character.jumping = false;
+        character.y = canvas.height - 150;
+        character.dy = 0;
+    } else {
+        character.dy += gravity;
+    }
+}
+
 function gameLoop() {
     if (!gameRunning) {
         return; // Exit loop if game is not running
@@ -160,11 +171,19 @@ function gameLoop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     drawJungle();
+    updateCharacter();
     updateObstacles();
     updatePowerUps();
 
     drawObstacles();
     drawPowerUps();
+
+    ctx.fillStyle = 'black'; // Draw the ground
+    ctx.fillRect(0, canvas.height - 100, canvas.width, 100);
+
+    ctx.fillStyle = 'green';
+    ctx.fillRect(0, canvas.height - 95, canvas.width, 5);
+
     requestAnimationFrame(gameLoop); // Keep the game running
 }
 
