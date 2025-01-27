@@ -19,19 +19,18 @@ const character = {
 };
 
 const obstacles = [];
-const powerUps = [];
 const jungleLayers = [
     { x: 0, y: 0, speed: 1, image: new Image() },
-    { x: 0, y: 0, speed: 2, image: new Image() },
+    { x: 0, y: 0, speed: 2, image: new Image() }
 ];
 
-jungleLayers[0].image.src = 'jungle_layer1.png'; // Placeholder path
-jungleLayers[1].image.src = 'jungle_layer2.png'; // Placeholder path
+jungleLayers[0].image.src = 'jungle_layer1.png'; // Placeholder path for layer 1
+jungleLayers[1].image.src = 'jungle_layer2.png'; // Placeholder path for layer 2
 
 const gravity = 1;
 let obstacleSpeed = 5;
 const obstacleY = canvas.height - 150;
-let gameRunning = true; // Start the game immediately
+let gameRunning = true; // Start game immediately
 let score = 0;
 let obstaclesCleared = 0;
 
@@ -51,35 +50,18 @@ function drawJungle() {
 }
 
 function createObstacle() {
-    const types = ['rock', 'stump', 'vine'];
-    const type = types[Math.floor(Math.random() * types.length)];
+    const spacing = 200 + Math.random() * 300; // Random spacing
     const obstacle = {
-        x: canvas.width,
+        x: canvas.width + spacing,
         y: obstacleY,
         width: 50,
-        height: type === 'vine' ? 100 : 50,
-        type,
-        color: type === 'rock' ? 'gray' : type === 'stump' ? 'brown' : 'green',
+        height: 50,
+        color: 'brown',
         scored: false
     };
     obstacles.push(obstacle);
 
-    setTimeout(createObstacle, Math.random() * 1000 + 1500);
-}
-
-function createPowerUp() {
-    const powerUp = {
-        x: canvas.width,
-        y: Math.random() * (canvas.height - 200),
-        width: 30,
-        height: 30,
-        type: 'invincibility',
-        color: 'gold',
-        collected: false
-    };
-    powerUps.push(powerUp);
-
-    setTimeout(createPowerUp, Math.random() * 5000 + 10000);
+    setTimeout(createObstacle, Math.random() * 2000 + 1500); // Randomize next obstacle
 }
 
 function updateObstacles() {
@@ -87,11 +69,10 @@ function updateObstacles() {
         obstacles[i].x -= obstacleSpeed;
         if (!obstacles[i].scored && obstacles[i].x + obstacles[i].width < character.x) {
             score++;
-            obstaclesCleared++;
             obstacles[i].scored = true;
             scoreDisplay.textContent = `Score: ${score}`;
 
-            if (obstaclesCleared % 5 === 0) {
+            if (++obstaclesCleared % 5 === 0) {
                 obstacleSpeed += 1; // Increase speed every 5 obstacles
             }
         }
@@ -101,56 +82,27 @@ function updateObstacles() {
     }
 }
 
-function updatePowerUps() {
-    for (let i = powerUps.length - 1; i >= 0; i--) {
-        powerUps[i].x -= obstacleSpeed;
+function detectCollision() {
+    for (const obstacle of obstacles) {
         if (
-            character.x < powerUps[i].x + powerUps[i].width &&
-            character.x + character.width > powerUps[i].x &&
-            character.y < powerUps[i].y + powerUps[i].height &&
-            character.y + character.height > powerUps[i].y
+            character.x < obstacle.x + obstacle.width &&
+            character.x + character.width > obstacle.x &&
+            character.y < obstacle.y + obstacle.height &&
+            character.y + character.height > obstacle.y
         ) {
-            powerUps[i].collected = true;
-            obstacleSpeed *= 0.5; // Temporary slow-down effect
-            setTimeout(() => {
-                obstacleSpeed *= 2; // Restore speed
-            }, 5000);
-        }
-        if (powerUps[i].x + powerUps[i].width < 0 || powerUps[i].collected) {
-            powerUps.splice(i, 1);
+            gameOver();
         }
     }
 }
 
-function drawObstacles() {
-    obstacles.forEach((obstacle) => {
-        ctx.fillStyle = obstacle.color;
-        if (obstacle.type === 'vine') {
-            ctx.fillRect(obstacle.x, obstacle.y - obstacle.height, obstacle.width, obstacle.height);
-        } else {
-            ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
-        }
-    });
+function drawCharacter() {
+    ctx.fillStyle = 'black';
+    ctx.fillRect(character.x, character.y, character.width, character.height);
+    ctx.fillStyle = 'gray';
+    ctx.beginPath();
+    ctx.arc(character.x + 25, character.y - 20, 20, 0, Math.PI * 2);
+    ctx.fill();
 }
-
-function drawPowerUps() {
-    powerUps.forEach((powerUp) => {
-        if (!powerUp.collected) {
-            ctx.fillStyle = powerUp.color;
-            ctx.fillRect(powerUp.x, powerUp.y, powerUp.width, powerUp.height);
-        }
-    });
-}
-
-document.addEventListener('keydown', (e) => {
-    if (e.code === 'Space') {
-        if (!character.jumping) {
-            character.jumping = true;
-            character.dy = -16; // Trigger jump
-        }
-        instructions.style.display = 'none'; // Hide instructions
-    }
-});
 
 function updateCharacter() {
     character.y += character.dy;
@@ -164,33 +116,30 @@ function updateCharacter() {
 }
 
 function gameLoop() {
-    if (!gameRunning) {
-        return; // Exit loop if game is not running
-    }
+    if (!gameRunning) return;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     drawJungle();
     updateCharacter();
     updateObstacles();
-    updatePowerUps();
+    detectCollision();
 
-    drawObstacles();
-    drawPowerUps();
-
-    ctx.fillStyle = 'black'; // Draw the ground
-    ctx.fillRect(0, canvas.height - 100, canvas.width, 100);
+    drawCharacter();
+    obstacles.forEach((obstacle) => {
+        ctx.fillStyle = obstacle.color;
+        ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+    });
 
     ctx.fillStyle = 'green';
-    ctx.fillRect(0, canvas.height - 95, canvas.width, 5);
+    ctx.fillRect(0, canvas.height - 100, canvas.width, 5); // Grass
 
-    requestAnimationFrame(gameLoop); // Keep the game running
+    requestAnimationFrame(gameLoop);
 }
 
 retryButton.addEventListener('click', () => {
     gameRunning = true;
     obstacles.length = 0;
-    powerUps.length = 0;
     score = 0;
     obstacleSpeed = 5;
     scoreDisplay.textContent = `Score: ${score}`;
@@ -199,5 +148,4 @@ retryButton.addEventListener('click', () => {
 
 playBackgroundMusic();
 createObstacle();
-createPowerUp();
 gameLoop();
