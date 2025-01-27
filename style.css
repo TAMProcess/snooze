@@ -3,7 +3,7 @@ body {
     overflow: hidden;
     font-family: Arial, sans-serif;
     text-align: center;
-    background: #228B22; /* Jungle green background */
+    background: linear-gradient(to bottom, #87CEEB, #228B22); /* Sky to jungle gradient */
 }
 
 header {
@@ -25,7 +25,7 @@ header p {
 canvas {
     display: block;
     margin: 0 auto;
-    background: #87CEEB; /* Sky blue */
+    background: transparent;
 }
 
 .retry-button {
