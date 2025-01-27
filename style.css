@@ -3,6 +3,7 @@ body {
     overflow: hidden;
     font-family: Arial, sans-serif;
     text-align: center;
+    background: linear-gradient(to bottom, #1e90ff, #87cefa); /* Vibrant sky background */
 }
 
 header {
@@ -24,7 +25,7 @@ header p {
 canvas {
     display: block;
     margin: 0 auto;
-    background: #87CEEB;
+    background: transparent;
 }
 
 .retry-button {
@@ -47,15 +48,15 @@ canvas {
     top: 20px;
     right: 20px;
     font-size: 24px;
-    color: black;
-    background-color: green;
+    color: white;
+    background-color: rgba(0, 128, 0, 0.8);
     padding: 10px 20px;
     border-radius: 10px;
 }
 
 .final-score {
     font-size: 24px;
-    color: black;
+    color: white;
     margin-bottom: 10px;
 }
 
