@@ -33,6 +33,8 @@ const obstacleY = canvas.height - 100;
 let gameRunning = true; // Start game immediately
 let score = 0;
 let obstaclesCleared = 0;
+let difficulty = 1;
+let comboCounter = 0;
 
 function playBackgroundMusic() {
     backgroundMusic.play();
@@ -50,34 +52,47 @@ function drawJungle() {
 }
 
 function createObstacle() {
-    const spacing = 300 + Math.random() * 200; // Random spacing
+    const spacing = Math.max(200, 400 - difficulty * 20) + Math.random() * 150;
     const obstacle = {
         x: canvas.width + spacing,
         y: obstacleY,
         width: 50,
         height: 50,
-        color: 'brown',
-        scored: false
+        color: '#FF4444',
+        scored: false,
+        passedOver: false
     };
     obstacles.push(obstacle);
 
-    setTimeout(createObstacle, Math.random() * 2000 + 1500); // Randomize next obstacle
+    setTimeout(createObstacle, Math.max(1000, 2500 - difficulty * 150) + Math.random() * 1000);
 }
 
 function updateObstacles() {
     for (let i = obstacles.length - 1; i >= 0; i--) {
         obstacles[i].x -= obstacleSpeed;
+        
+        // Check if character passed over the obstacle (not hit it)
         if (!obstacles[i].scored && obstacles[i].x + obstacles[i].width < character.x) {
-            if (character.y + character.height <= obstacleY) {
+            // Only score if character was above the obstacle when passing
+            if (character.y + character.height <= obstacleY - 10) {
                 score++;
+                comboCounter++;
                 obstacles[i].scored = true;
-                scoreDisplay.textContent = `Score: ${score}`;
+                scoreDisplay.textContent = `Score: ${score} | Combo: ${comboCounter}`;
 
-                if (++obstaclesCleared % 5 === 0) {
-                    obstacleSpeed += 1; // Increase speed every 5 obstacles
+                if (++obstaclesCleared % 3 === 0) {
+                    obstacleSpeed += 1;
+                    difficulty++;
                 }
             }
         }
+        
+        // Check if obstacle passed character without being cleared
+        if (!obstacles[i].scored && obstacles[i].x < character.x && obstacles[i].x + obstacles[i].width > character.x && obstacles[i].y + obstacles[i].height >= character.y + character.height - 10) {
+            obstacles[i].scored = true; // Mark as scored to avoid double penalty
+            comboCounter = 0; // Break combo on failed jump
+        }
+        
         if (obstacles[i].x + obstacles[i].width < 0) {
             obstacles.splice(i, 1);
         }
@@ -98,17 +113,28 @@ function detectCollision() {
 }
 
 function drawCharacter() {
-    ctx.fillStyle = 'black'; // Body
+    // Draw body with gradient effect
+    ctx.fillStyle = 'black';
     ctx.fillRect(character.x, character.y, character.width, character.height);
+    
+    // Draw eyes
+    ctx.fillStyle = 'white';
+    ctx.fillRect(character.x + 8, character.y + 10, 10, 10);
+    ctx.fillRect(character.x + 32, character.y + 10, 10, 10);
+    ctx.fillStyle = 'black';
+    ctx.fillRect(character.x + 10, character.y + 12, 6, 6);
+    ctx.fillRect(character.x + 34, character.y + 12, 6, 6);
 
-    ctx.fillStyle = 'gray'; // Head
+    // Draw head (stylized)
+    ctx.fillStyle = '#333';
     ctx.beginPath();
-    ctx.arc(character.x + character.width / 2, character.y - 20, 20, 0, Math.PI * 2);
+    ctx.arc(character.x + character.width / 2, character.y - 15, 18, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.fillStyle = 'black'; // Arms
-    ctx.fillRect(character.x - 10, character.y + 10, 10, 30); // Left arm
-    ctx.fillRect(character.x + character.width, character.y + 10, 10, 30); // Right arm
+    // Draw arms
+    ctx.fillStyle = '#555';
+    ctx.fillRect(character.x - 8, character.y + 8, 8, 28);
+    ctx.fillRect(character.x + character.width, character.y + 8, 8, 28);
 }
 
 function updateCharacter() {
@@ -134,11 +160,16 @@ document.addEventListener('keydown', (e) => {
 
 function gameOver() {
     gameRunning = false;
-    finalScoreDisplay.textContent = `Your final score: ${score}`;
+    const finalMessage = `Your final score: ${score}\nCombo: ${comboCounter}\nLevel reached: ${difficulty}`;
+    finalScoreDisplay.textContent = finalMessage;
     finalScoreDisplay.style.position = 'absolute';
     finalScoreDisplay.style.top = '45%';
     finalScoreDisplay.style.left = '50%';
     finalScoreDisplay.style.transform = 'translate(-50%, -50%)';
+    finalScoreDisplay.style.color = 'white';
+    finalScoreDisplay.style.fontSize = '28px';
+    finalScoreDisplay.style.textAlign = 'center';
+    finalScoreDisplay.style.whiteSpace = 'pre-line';
     retryButton.style.display = 'block';
 }
 
@@ -154,12 +185,23 @@ function gameLoop() {
 
     drawCharacter();
     obstacles.forEach((obstacle) => {
+        // Draw obstacle with gradient
         ctx.fillStyle = obstacle.color;
         ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+        
+        // Add shading
+        ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
+        ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, 10);
     });
 
-    ctx.fillStyle = 'green';
+    ctx.fillStyle = '#228B22';
     ctx.fillRect(0, canvas.height - 100, canvas.width, 10); // Grass
+    
+    // Draw difficulty indicator
+    ctx.fillStyle = 'white';
+    ctx.font = '16px Arial';
+    ctx.fillText(`Level: ${difficulty}`, 20, 40);
+    ctx.fillText(`Speed: ${obstacleSpeed}`, 20, 65);
 
     requestAnimationFrame(gameLoop);
 }
@@ -168,10 +210,17 @@ retryButton.addEventListener('click', () => {
     gameRunning = true;
     obstacles.length = 0;
     score = 0;
+    comboCounter = 0;
     obstacleSpeed = 5;
-    scoreDisplay.textContent = `Score: ${score}`;
+    difficulty = 1;
+    character.x = 100;
+    character.y = canvas.height - 150;
+    character.dy = 0;
+    character.jumping = false;
+    scoreDisplay.textContent = `Score: ${score} | Combo: 0`;
     finalScoreDisplay.textContent = '';
     retryButton.style.display = 'none';
+    instructions.style.display = 'none';
     gameLoop();
 });
 
