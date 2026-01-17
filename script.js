@@ -4,7 +4,7 @@ const retryButton = document.getElementById('retryButton');
 const scoreDisplay = document.getElementById('scoreDisplay');
 const finalScoreDisplay = document.getElementById('finalScore');
 const instructions = document.getElementById('instructions');
-const backgroundMusic = document.getElementById('backgroundMusic');
+// const backgroundMusic = document.getElementById('backgroundMusic');
 
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight - document.querySelector('header').offsetHeight;
@@ -37,7 +37,8 @@ let difficulty = 1;
 let comboCounter = 0;
 
 function playBackgroundMusic() {
-    backgroundMusic.play();
+    // Placeholder for future background music implementation
+    // backgroundMusic.play();
 }
 
 function drawJungle() {
